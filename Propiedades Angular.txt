@@ -1,0 +1,393 @@
+TIPS
+
+
+<pre>{{ character | json }}</pre> : Construye los objetos como json, ya no saldra como [object, object]
+
+() : Son eventos
+[] : Son atributos
+
+{{ 'hola' | uppercase }} : El pipe ' | ' permite que la informacion se vea diferente sin cambiar la data original
+
+==========================================================
+
+
+PETICION HTTP: hacer peticiones a una api, se hace de esta manera para usar interceptores, o suscribers para suscribirnos a las respuestas en caso de que las peticiones se emitan mas de una vez, o cancelar la peticion.
+
+
+app.module -----------
+Se importa, en este caso en el modulo principal (app.module) porque puede ser algo que utilicemos en muchos modulos
+
+import { HttpClientModule } from '@angular/common/http';
+
+imports: [
+    BrowserModule,
+	// Aqui se importa
+    HttpClientModule, 
+
+    GifsModule,
+    SharedModule
+],
+
+.service -----------
+Se importa, inyecta en donde se vaya a utilizar. Finalmente lo utilizamos
+
+	// Lo importamos
+import { HttpClient } from '@angular/common/http';
+
+	// Lo inyectamos
+constructor( private http: HttpClient ) { }
+
+	// Lo utilizamos
+this.http.get('URL').subscribe( respuesta => {
+   console.log(respuesta);
+});
+
+	// Otra manera de utilizarlo con parametros
+// URL ORIGINAL: https://api.giphy.com/v1/gifs/search?api_key=G2gfKompezCTicJ8tqICXj6Txo27QQBR&q=valorant&limit=10
+
+	// Cortamos la parte del enlace
+private serviceUrl: string = 'https://api.giphy.com/v1/gifs'
+
+	// Los parametros que estan despues del ? se almacenan en un objeto de tipo HttpParams
+const params = new HttpParams()
+      .set('api_key', this.apiKey)
+      .set('limit', 10)
+      .set('q', tag)
+
+	// Se hace la peticion, pero inclusive podriamos mandar los headers cambiando
+	// { params } por -> { params, headers } y ponemos el tipo de dato en los <>
+this.http.get<Tipo de Dato>(`${this.serviceUrl}/search?`, { params })
+      .subscribe( res => {
+        console.log(res);
+});
+
+==========================================================
+
+ngIf ----------
+If-Else 
+
+// ngIf=condicion; else (identificador)
+<div *ngIf="deletedHero"; else nothingWasDeleted>
+  <h3>Heroe Borrado <small class="text-danger">{{ deletedHero }}</small></h3>
+</div>
+
+// #identificador || Mostrar el else
+<ng-template #nothingWasDeleted>
+  <h3>No ha borrado nada</h3>
+</ng-template>
+
+
+ngClass ----------
+
+.html -----------
+<li *ngFor="let character of characterList;
+    index as i;
+    first as isFirst;
+    last as isLast;
+    even as isEven;
+    odd as isOdd"
+    class="list-group-item"
+	// el ultimo sera dark y los que sean par tendran color primario (dos acciones en consultas separadas)
+    [ngClass]="{
+      'list-group-item-dark': isLast,
+      'list-group-item-primary': isEven }">
+
+      <span class="text-primary">{{ i + 1 }}. </span>
+
+      <span>{{ character.name }} - </span>
+
+      <strong>Power: </strong>
+
+      <span>{{ character.power }}</span>
+</li>
+
+
+ngModel ----------
+
+
+importar el FormsModule
+
+.ts -----------
+export class AddCharacterComponent {
+
+	// Preparamos el objeto o variable al cual aplicaremos el model
+  public character: Character = {
+    name: '',
+    power: 0
+  }
+
+}
+
+.html -----------
+<form class="row">
+  <input type="text"
+	// Se enlaza al atributo del objeto
+  [(ngModel)]="character.name"
+	// Se le pone atributo name, como un identificador para el model
+  name="name"
+  class="form-control mb-2"
+  placeholder="Nombre">
+
+	// Lo mismo que lo anterior
+  <input type="number"
+  [(ngModel)]="character.power"
+  name="power"
+  class="form-control mb-2"
+  placeholder="Poder">
+
+  <button type="submit" class="btn btn-primary">
+    Agregar
+  </button>
+</form>
+
+
+ngSubmit ----------
+
+
+.html -----------
+	// Se asocia el evento submit, para cuando se envia el formulario, se ejecute el metodo emitCharacter()
+<form class="row" (ngSubmit)="emitCharacter()">
+</form>
+
+.ts -----------
+export class AddCharacterComponent {
+
+	// Se ejecuta este metodo al hacer submit del formulario
+  emitCharacter(): void {
+    console.log(this.character)
+  }
+
+}
+
+===========================================================
+
+Modulos: 
+declarations: aqui se declaran todos los -componentes- que pertenecen al modulo.
+
+exports: aqui se exportan los componentes para utilizarlos en otros modulos.
+
+imports: aqui se importan modulos para poder utilizar sus componentes (solo los que fueron exportados en dicho modulo)
+
+===========================================================
+
+@Input() propiedad; ----------------
+Permite al componente padre enviar informacion al componente hijo
+
+COMPONENTE PADRE:
+
+.ts -----------
+export class MainPageComponent {
+
+	// characters = Variable comun, que es una lista de personajes y estan declaradas en el componente padre
+  public characters: Character[] = [
+    {
+      name: 'Krillin',
+      power: 1000
+    },
+    {
+      name: 'Goku',
+      power: 9500
+    }
+  ];
+
+}
+
+// characters tiene que pasar al hijo
+.html -----------
+<div>
+	// characterList = variable declarada en el .ts del hijo preparada para recibir la info del padre
+	// characters = variable declarada en el .ts del padre, con la informacion que recibira el hijo
+	// Este es el componente hijo, utilizado por el padre
+    <app-dbz-list [characterList]="characters"></app-dbz-list> 
+</div>
+
+COMPONENTE HIJO:
+
+.ts -----------
+export class ListComponent {
+
+	// @Input() - Obligatorio, esto prepara a la variable para recibir informacion del padre
+  @Input()
+  public characterList: Character[] = []
+
+}
+ 
+.html -----------
+	// Recorremos characterList, variable declarada en el componente hijo con la informacion recibida del padre
+<li *ngFor="let character of characterList"
+    class="list-group-item">
+    <span>{{ character.name }} - </span>
+    <strong>Power:</strong>
+    <span>{{ character.power }}</span>
+</li>
+
+
+
+@Output() ----------------
+
+Permite al componente hijo enviar informacion al componente padre
+
+COMPONENTE HIJO:
+
+.ts -----------
+export class AddCharacterComponent {
+
+	// @Output() - Obligatorio, esto prepara a la variable para emitir informacion desde el hijo
+	// Creamos la variable que ejecutara la emision de informacion
+  @Output()
+  public onNewCharacter: EventEmitter<Character> = new EventEmitter();
+
+	// Objeto que se emitira
+  public character: Character = {
+    name: '',
+    power: 0
+  }
+
+	// Metodo que se encarga de emitir el personaje y borrar los campos que escribio en los input
+  emitCharacter(): void {
+    if( this.character.name.length === 0 ) return
+
+	// Se emite la variable character a travez del evento contenido en onNewCharacter
+    this.onNewCharacter.emit(this.character)
+
+    this.character.name = '';
+    this.character.power = 0;
+  }
+}
+
+COMPONENTE PADRE:
+
+.ts -----------
+export class MainPageComponent {
+	// Metodo del padre que recibira la informacion del hijo, el parametro debe del tipo de dato que recibe
+	// El nombre es opcional, no necesariamente se tiene que llamar igual que el que emite el hijo
+  onNewCharacter( character: Character ): void {
+    console.log(character)
+  }
+}
+
+.html
+<div class="col">
+	// (onNewCharacter) : Evento que emite el hijo, que sera un valor
+	// ="onNewCharacter" : MEtodo del padre que recibe el valor
+	// $event : Valor que emite el hijo y el padre puede recibir y utilizarlo
+    <app-dbz-add-character (onNewCharacter)="onNewCharacter($event)"></app-dbz-add-character>
+</div>
+
+
+.html
+<input type="text" class="form-control"
+    placeholder="Buscar gifs..."
+	// Cuando presiona y suelta la tecla enter, llamamos a searchTag, el cual usa el valor de #txtTagInput
+    (keyup.enter)="searchTag()"
+	// txtTagInput: Referencia local, el cual almacena el valor del input
+    #txtTagInput>
+
+
+.ts -----------
+export class SearchBoxComponent {
+
+	// ViewChild sirve para tomar una referencia local, en este caso el valor de un input
+  @ViewChild('txtTagInput')
+	// Variable donde se almacenara el valor de la referencia, en los <> es dependiendo el elemento HTML
+	// En este caso es un input, por eso es HTMLInputElement, el ElementRef no cambia
+  public tagInput!: ElementRef<HTMLInputElement>;
+
+  constructor() { }
+
+  searchTag(): void {
+	// Aqui se asigna el valor en la constante newTag
+    const newTag = this.tagInput.nativeElement.value;
+    console.log({newTag})
+  }
+}
+
+
+===========================================================
+
+
+Servicios: Sirve para compartir informacion entre componentes.
+
+
+Creamos el servicio, y declaramos la informacion a compartir
+
+.service -----------
+export class DbzService {
+
+  public characters: Character[] = [
+    {
+      name: 'Krillin',
+      power: 1000
+    },
+    {
+      name: 'Goku',
+      power: 9500
+    },
+    {
+      name: 'Vegeta',
+      power: 7500
+    }
+  ];
+
+  onNewCharacter( character: Character ): void {
+    this.characters.unshift( character );
+  }
+
+  onDelete( index: number ): void {
+    this.characters.splice( index, 1 );
+  }
+}
+
+
+Ubicamos el componente donde queremos utilizar el servicio y lo inyectamos 
+
+.ts -----------
+export class MainPageComponent {
+
+	// Inyectamos el servicio a travez del constructor, privado para que solo acceda este componente a el.
+  constructor( private dbzService: DbzService ) {}
+
+	// Hacemos metodos y gets para acceder a la informacion del service, asi solo el componente tiene acceso
+  get characters(): Character[] {
+    return [...this.dbzService.characters];
+  }
+
+  onDeleteChatracter( id: string ): void {
+    this.dbzService.deleteCharacterById( id );
+  }
+
+  onNewCharacter( character: Character ): void {
+    this.dbzService.addCharacter( character )
+  }
+
+}
+
+
+==========================================================
+
+
+ROUTER: Crear rutas
+
+.module.ts -----------
+const routes: Routes = [
+  {
+    path: 'home',
+    component: HomePageComponent
+  },
+  {
+    path: 'about',
+    component: AboutPageComponent
+  },
+  {
+    path: '**',
+    redirectTo: 'home'
+  }
+]
+
+@NgModule({
+  imports: [
+	// Esto se pone en el root raiz, en las rutas hijas se usa .forChild
+    RouterModule.forRoot( routes )
+  ]
+})
+export class AppRoutingModule { }
